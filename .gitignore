@@ -1,0 +1,14 @@
+# Build output
+bin/
+obj/
+
+# Local Prophet 21 reference DLL drop location
+Check_Overstocked/Check_Overstocked/bin/
+
+# Optional local references folder contents
+Check_Overstocked/references/*.dll
+
+# User-specific files
+*.user
+*.suo
+*.cache
