@@ -56,6 +56,68 @@ Recommended manual compile pattern:
 & 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe' /nologo /target:library /out:'C:\Users\DanShao\.vscode\p21_business_rules\Check_Overstocked\bin\Debug\Check_Overstocked.dll' /r:'C:\Users\DanShao\.vscode\p21_business_rules\Check_Overstocked\Check_Overstocked\bin\Debug\P21.Clients.dll' /r:'C:\Users\DanShao\.vscode\p21_business_rules\Check_Overstocked\Check_Overstocked\bin\Debug\P21.DomainObject.dll' /r:'C:\Users\DanShao\.vscode\p21_business_rules\Check_Overstocked\Check_Overstocked\bin\Debug\P21.DomainObject.UDF.dll' /r:'C:\Users\DanShao\.vscode\p21_business_rules\Check_Overstocked\Check_Overstocked\bin\Debug\P21.Extensions.dll' /r:'C:\Users\DanShao\.vscode\p21_business_rules\Check_Overstocked\Check_Overstocked\bin\Debug\P21.UI.Service.Model.dll' /r:System.Data.dll /r:System.Core.dll /r:System.Data.DataSetExtensions.dll /r:System.Xml.dll /r:System.Xml.Linq.dll 'C:\Users\DanShao\.vscode\p21_business_rules\Check_Overstocked\Check_Overstocked.cs' 'C:\Users\DanShao\.vscode\p21_business_rules\Check_Overstocked\Validate_Manager_Approval_for_Overstocked_POs.cs' 'C:\Users\DanShao\.vscode\p21_business_rules\Check_Overstocked\Properties\AssemblyInfo.cs'
 ```
 
+## SQL Database Access
+
+The P21 database can be queried directly from VS Code using the MS SQL extension.
+
+---
+
+### Safety Rules (MANDATORY)
+- ONLY run SELECT queries
+- NEVER run INSERT, UPDATE, DELETE, MERGE, or DDL (CREATE/ALTER/DROP)
+- Assume read-only access at all times
+
+---
+
+### Connection
+- Use mssql_list_servers to discover servers
+- Use mssql_connect to connect
+- Use mssql_run_query to execute queries
+
+---
+
+### Query Guidelines
+- Use SELECT TOP n for exploration
+- Avoid SELECT * in production queries
+- Always filter large tables when possible
+- Be cautious with large tables:
+  inv_tran, inv_tran_bin_detail, oe_line
+
+---
+
+### Schema Discovery
+- Tables:
+  SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'
+
+- Columns:
+  SELECT COLUMN_NAME, DATA_TYPE
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_NAME = 'inv_mast'
+
+---
+
+### Key Tables
+- inv_mast — item master (inv_mast_uid, item_id, description)
+- inv_loc — inventory by location
+- prod_order_hdr — production orders
+- prod_order_line — production lines
+- prod_order_line_component — raw materials
+- oe_hdr / oe_line — sales orders
+
+---
+
+### Common Join Patterns
+- inv_mast ↔ inv_loc via inv_mast_uid
+- prod_order_hdr ↔ prod_order_line via prod_order_number
+- prod_order_line_component ↔ inv_mast via inv_mast_uid
+- oe_hdr ↔ oe_line via order_no
+
+---
+
+### Time Handling
+- Convert to Pacific Time when needed:
+  your_date_column AT TIME ZONE 'UTC' AT TIME ZONE 'Pacific Standard Time'
+
 ## Caveats
 
 - The SMTP email in `Check_Overstocked` is best-effort only and failures are swallowed.
