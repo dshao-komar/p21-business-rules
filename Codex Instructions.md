@@ -1,8 +1,21 @@
-1. Save an overstocked PO without manager approval and confirm approved flips to N.
--- this works
-2. Try checking ufc_po_hdr_ud_manager_approved as a non-authorized user and confirm it gets reset.
--- it does not. logged in as a role = PURCHASING and i was allowed to check the box and save.
-3. Try the same checkbox as an authorized role and confirm approved can remain checked afterward.
--- this works
+Using P21Import, these are solid test candidates for Populate_Required_Date:
 
-we need to do more digging to actually bring in the current role and user of the current session. the sql i sent you is how you check what each user's role is, but it doesn't find the current role and user of the current session.
+Best clean positive-qty candidates:
+
+8052371 / STP661200PQ / expected required_date = 2025-07-11 / expected customer QST INDUSTRIAS DE MEXICO
+8052315 / STP661200BQ / expected required_date = 2025-10-17 / expected customer QST INDUSTRIAS DE MEXICO
+8052314 / KR303619750BLUE / expected required_date = 2025-10-27 / expected customer AMERICAN EXCELSIOR COMPANY
+Other candidates returned from P21Import:
+
+8051840 / KR4066 / 2025-03-17 / ZOCA GEAR, INC
+8051841 / KR4066 / 2025-03-17 / ZOCA GEAR, INC
+8052814 / 121724 / 2025-04-01 / IMPERIAL BAG & PAPER /AREA
+8053105 / 101548 / 2025-05-07 / KELLY SPICERS
+8053092 / KR4060 / 2025-06-24 / FRANCO AMERICAN TEXTILES
+8052964 / 101442 / 2025-09-12 / LUMINA PACKAGING
+8052962 / UPLOT30563 / 2025-09-22 / DOS MARKING & GRADING
+8053118 / 101428 / 2025-09-30 / IMPERIAL BAG & PAPER /TPC
+8050627 / KR304419750BLUE / 2025-10-27 / AMERICAN EXCELSIOR COMPANY
+8052591 / KR303619750BLUE / 2025-10-27 / AMERICAN EXCELSIOR COMPANY
+8052728 / KR303619750BLUE / 2025-10-27 / AMERICAN EXCELSIOR COMPANY
+8052729 / KR304419750BLUE / 2025-10-27 / AMERICAN EXCELSIOR COMPANY

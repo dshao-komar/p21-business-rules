@@ -6,11 +6,7 @@ This workspace contains a Prophet 21 / DynaChange business rule project for purc
 
 Primary project folder:
 
-- `C:\Users\DanShao\.vscode\p21_business_rules\Check_Overstocked`
-
-Primary output DLL:
-
-- `C:\Users\DanShao\.vscode\p21_business_rules\Check_Overstocked\bin\Debug\Check_Overstocked.dll`
+- `C:\Users\DanShao\.vscode\p21_business_rules`
 
 The user provided:
 
@@ -41,14 +37,19 @@ See [Check_Overstocked/AGENTS.md](Check_Overstocked/AGENTS.md) for detailed busi
 When changing this project:
 
 1. Read the current rule files before editing.
-2. Preserve the confirmed field/table names unless the user explicitly changes them.
-3. Be careful with field-edit validators:
+2. Make a detailed AGENTS.md file within the rule folder that documents exactly how to setup the rule. See example: `C:\Users\DanShao\.vscode\p21_business_rules\Check_Overstocked\AGENTS.md`
+   - include an explicit `Field Selector Setup` section
+   - list every field that must be selected in Prophet 21
+   - list every field that is used as a trigger, or explicitly state that there are no field-specific triggers for save rules
+   - do not leave Field Selector details implied by the code
+3. Preserve the confirmed field/table names unless the user explicitly changes them.
+4. Be careful with field-edit validators:
    - direct writeback to the same field during edit can freeze the screen
    - prefer validator rejection when blocking a field edit
-4. Keep using `Session.UserID` for the validation rule unless the user asks to change it.
-5. If changing messages, keep the business wording aligned with the current live process.
-6. Rebuild the DLL after any code change.
-7. Do not rely on WSL/Linux to build the DLL; the working compile path is Windows `csc.exe` with the local P21 DLL references.
+5. Keep using `Session.UserID` for the validation rule unless the user asks to change it.
+6. If changing messages, keep the business wording aligned with the current live process.
+7. Rebuild the DLL after any code change.
+8. Do not rely on WSL/Linux to build the DLL; the working compile path is Windows `csc.exe` with the local P21 DLL references.
 
 Recommended manual compile pattern:
 
@@ -123,3 +124,22 @@ The P21 database can be queried directly from VS Code using the MS SQL extension
 - The SMTP email in `Check_Overstocked` is best-effort only and failures are swallowed.
 - Power Automate import/export artifacts were not created; only documentation and SQL patterns exist.
 - The P21 guide and Power Automate guide should be updated if rule behavior changes.
+
+## Rule Setup Documentation Standard
+
+For every business-rule folder, the local `AGENTS.md` must document the Prophet 21 setup in enough detail that someone can configure the rule without reverse-engineering the code.
+
+Minimum required setup details:
+
+- `Rule Name`
+- `Rule Type`
+- `Apply Rule On`
+- whether `Multi-Row` is checked
+- `Field Selector Setup` with each selected field listed individually
+- `Triggered Fields` with each trigger field listed individually, or an explicit note that no field-level trigger applies
+- DLL path to attach
+
+For save-time validator rules in particular:
+
+- state clearly that there is no field-edit trigger
+- still list every header and line field that must be selected so the multi-row dataset includes all required inputs and outputs
