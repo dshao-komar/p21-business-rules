@@ -160,12 +160,15 @@ namespace Populate_Required_Date
             sql.AppendLine("          oel.inv_mast_uid");
             sql.AppendLine("        , m.item_id");
             sql.AppendLine("        , cst.customer_name");
-            sql.AppendLine("        , CAST(oel.required_date AS date) AS required_date");
-            sql.AppendLine("        , CAST(oel.qty_ordered AS decimal(19, 6)) AS qty_ordered");
+            sql.AppendLine("        , CAST(COALESCE(oels.release_date, oel.required_date) AS date) AS required_date");
+            sql.AppendLine("        , CAST(COALESCE(oels.release_qty, oel.qty_ordered) AS decimal(19, 6)) AS qty_ordered");
             sql.AppendLine("        , CONVERT(varchar(50), oel.order_no) AS order_no");
             sql.AppendLine("    FROM oe_line oel");
             sql.AppendLine("    INNER JOIN oe_hdr oeh");
             sql.AppendLine("        ON oeh.order_no = oel.order_no");
+            sql.AppendLine("    LEFT JOIN oe_line_schedule oels");
+            sql.AppendLine("        ON oels.order_no = oel.order_no");
+            sql.AppendLine("       AND oels.line_no = oel.line_no");
             sql.AppendLine("    INNER JOIN customer cst");
             sql.AppendLine("        ON cst.customer_id = oeh.customer_id");
             sql.AppendLine("    INNER JOIN inv_mast m");
@@ -175,7 +178,7 @@ namespace Populate_Required_Date
             sql.AppendLine("      AND COALESCE(oeh.order_type, 0) NOT IN (1877, 1706)");
             sql.AppendLine("      AND ISNULL(oeh.rma_flag, 'N') <> 'Y'");
             sql.AppendLine("      AND ISNULL(oeh.warranty_rma_flag, 'N') <> 'Y'");
-            sql.AppendLine("      AND oel.required_date IS NOT NULL");
+            sql.AppendLine("      AND COALESCE(oels.release_date, oel.required_date) IS NOT NULL");
             sql.AppendLine("      AND oel.inv_mast_uid IN (" + BuildParameterList(invMastUidCount) + ")");
             sql.AppendLine(")");
             sql.AppendLine("SELECT TOP (1)");

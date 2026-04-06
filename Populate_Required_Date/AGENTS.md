@@ -35,7 +35,19 @@ Qualifying sales-order rows must meet all of the following:
 - `COALESCE(oe_hdr.order_type, 0) NOT IN (1877, 1706)`
 - `ISNULL(oe_hdr.rma_flag, 'N') <> 'Y'`
 - `ISNULL(oe_hdr.warranty_rma_flag, 'N') <> 'Y'`
-- `oe_line.required_date IS NOT NULL`
+- `COALESCE(oe_line_schedule.release_date, oe_line.required_date) IS NOT NULL`
+
+### Required date source
+
+The rule must mirror the `required_dt` logic used in `fact_open_orders`:
+
+- if a release schedule exists for the sales-order line, use `oe_line_schedule.release_date`
+- otherwise use `oe_line.required_date`
+
+Current implementation:
+
+- `required_date = COALESCE(oe_line_schedule.release_date, oe_line.required_date)`
+- `qty_ordered = COALESCE(oe_line_schedule.release_qty, oe_line.qty_ordered)` for tie-break consistency when a release schedule row exists
 
 ### Finished-item scope
 
@@ -143,6 +155,7 @@ If a nightly SQL synchronization job is used to backfill or correct production-o
 
 - exclude `oe_hdr.rma_flag = 'Y'`
 - exclude `oe_hdr.warranty_rma_flag = 'Y'`
+- derive `required_date` from `COALESCE(oe_line_schedule.release_date, oe_line.required_date)`
 - keep the same tie-break order:
   1. earliest `required_date`
   2. highest `qty_ordered`

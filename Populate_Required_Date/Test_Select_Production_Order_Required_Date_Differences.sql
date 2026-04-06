@@ -5,12 +5,15 @@ WITH cte_open_sales_orders AS
     SELECT
           oel.inv_mast_uid
         , cst.customer_name
-        , CAST(oel.required_date AS date) AS required_date
-        , CAST(oel.qty_ordered AS decimal(19, 6)) AS qty_ordered
+        , CAST(COALESCE(oels.release_date, oel.required_date) AS date) AS required_date
+        , CAST(COALESCE(oels.release_qty, oel.qty_ordered) AS decimal(19, 6)) AS qty_ordered
         , oel.order_no
     FROM oe_line oel
     INNER JOIN oe_hdr oeh
         ON oeh.order_no = oel.order_no
+    LEFT JOIN oe_line_schedule oels
+        ON oels.order_no = oel.order_no
+       AND oels.line_no = oel.line_no
     INNER JOIN customer cst
         ON cst.customer_id = oeh.customer_id
     WHERE oel.complete = 'N'
@@ -18,7 +21,7 @@ WITH cte_open_sales_orders AS
       AND COALESCE(oeh.order_type, 0) NOT IN (1877, 1706)
       AND ISNULL(oeh.rma_flag, 'N') <> 'Y'
       AND ISNULL(oeh.warranty_rma_flag, 'N') <> 'Y'
-      AND oel.required_date IS NOT NULL
+      AND COALESCE(oels.release_date, oel.required_date) IS NOT NULL
 ),
 cte_ranked_matches AS
 (
@@ -48,6 +51,7 @@ cte_ranked_matches AS
 )
 SELECT
       poh.prod_order_number
+    , CAST(pohud.estimated_start_date AS date) AS scheduled_run_date
     , CAST(poh.required_date AS date) AS current_required_date
     , CAST(rm.required_date AS date) AS new_required_date
     , pohud.customer_name AS current_customer_name
