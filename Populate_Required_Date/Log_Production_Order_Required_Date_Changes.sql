@@ -1,8 +1,5 @@
 SET NOCOUNT ON;
 
-IF OBJECT_ID('tempdb..#prod_order_required_date_changes', 'U') IS NOT NULL
-    DROP TABLE #prod_order_required_date_changes;
-
 WITH cte_open_sales_orders AS
 (
     SELECT
@@ -61,42 +58,50 @@ cte_target_values AS
         , rm.order_no
     FROM cte_ranked_matches rm
     WHERE rm.rn = 1
+),
+cte_changes AS
+(
+    SELECT
+          tv.prod_order_number
+        , tv.required_date AS new_required_date
+        , tv.customer_name AS new_customer_name
+        , tv.order_no AS sales_order_no
+        , CAST(poh.required_date AS date) AS old_required_date
+        , pohud.customer_name AS old_customer_name
+    FROM cte_target_values tv
+    INNER JOIN prod_order_hdr poh
+        ON poh.prod_order_number = tv.prod_order_number
+    LEFT JOIN prod_order_hdr_ud pohud
+        ON pohud.prod_order_number = tv.prod_order_number
+    WHERE
+        ISNULL(CAST(poh.required_date AS date), '19000101') <> tv.required_date
+        OR ISNULL(LTRIM(RTRIM(pohud.customer_name)), '') <> ISNULL(LTRIM(RTRIM(tv.customer_name)), '')
+)
+INSERT INTO dbo.prod_order_required_date_change_log
+(
+      prod_order_number
+    , sales_order_no
+    , old_required_date
+    , new_required_date
+    , old_customer_name
+    , new_customer_name
 )
 SELECT
-      tv.prod_order_number
-    , tv.required_date AS new_required_date
-    , tv.customer_name AS new_customer_name
-    , tv.order_no AS sales_order_no
-    , CAST(poh.required_date AS date) AS old_required_date
-    , pohud.customer_name AS old_customer_name
-INTO #prod_order_required_date_changes
-FROM cte_target_values tv
-INNER JOIN prod_order_hdr poh
-    ON poh.prod_order_number = tv.prod_order_number
-LEFT JOIN prod_order_hdr_ud pohud
-    ON pohud.prod_order_number = tv.prod_order_number
-WHERE
-    ISNULL(CAST(poh.required_date AS date), '19000101') <> tv.required_date
-    OR ISNULL(LTRIM(RTRIM(pohud.customer_name)), '') <> ISNULL(LTRIM(RTRIM(tv.customer_name)), '');
-
-UPDATE poh
-SET poh.required_date = c.new_required_date
-FROM prod_order_hdr poh
-INNER JOIN #prod_order_required_date_changes c
-    ON c.prod_order_number = poh.prod_order_number;
-
-UPDATE pohud
-SET pohud.customer_name = c.new_customer_name
-FROM prod_order_hdr_ud pohud
-INNER JOIN #prod_order_required_date_changes c
-    ON c.prod_order_number = pohud.prod_order_number;
-
-SELECT
       c.prod_order_number
+    , CONVERT(varchar(50), c.sales_order_no)
     , c.old_required_date
     , c.new_required_date
     , c.old_customer_name
     , c.new_customer_name
-    , c.sales_order_no
-FROM #prod_order_required_date_changes c
-ORDER BY c.new_required_date, c.prod_order_number;
+FROM cte_changes c;
+
+SELECT
+      prod_order_number
+    , sales_order_no
+    , old_required_date
+    , new_required_date
+    , old_customer_name
+    , new_customer_name
+FROM dbo.prod_order_required_date_change_log
+WHERE logged_at >= DATEADD(minute, -5, GETDATE())
+ORDER BY logged_at DESC, prod_order_number;

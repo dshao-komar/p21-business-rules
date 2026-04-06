@@ -50,6 +50,7 @@ When changing this project:
 6. If changing messages, keep the business wording aligned with the current live process.
 7. Rebuild the DLL after any code change.
 8. Do not rely on WSL/Linux to build the DLL; the working compile path is Windows `csc.exe` with the local P21 DLL references.
+9. After any substantial code or SQL logic change, create a git commit and push it unless the user explicitly asks not to.
 
 Recommended manual compile pattern:
 

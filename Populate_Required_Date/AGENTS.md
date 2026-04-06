@@ -161,3 +161,17 @@ If a nightly SQL synchronization job is used to backfill or correct production-o
   2. highest `qty_ordered`
   3. alphabetical `customer_name`
   4. lowest `order_no` as final deterministic fallback
+
+### Recommended SQL Agent Step Order
+
+If SQL Server Agent is used for the nightly sync, the recommended order is:
+
+1. run `Create_Production_Order_Required_Date_Change_Log_Table.sql` once during setup
+2. nightly Step 1:
+   - run `Log_Production_Order_Required_Date_Changes.sql`
+   - this captures the rows that are about to change before the update runs
+3. nightly Step 2:
+   - run `Nightly_Sync_Production_Order_Required_Date.sql`
+   - this applies the actual production-order header updates
+
+The logging step should run before the update step so the log preserves the true pre-update values.
