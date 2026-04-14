@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{615797E6-DE4F-4652-BD6A-202513787520}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Set_Acknowledged_for_POs</RootNamespace>
+    <AssemblyName>Set_Acknowledged_for_POs</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>false</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="P21.Clients">
+      <HintPath>..\..\..\Check_Overstocked\Check_Overstocked\bin\Debug\P21.Clients.dll</HintPath>
+    </Reference>
+    <Reference Include="P21.DomainObject">
+      <HintPath>..\..\..\Check_Overstocked\Check_Overstocked\bin\Debug\P21.DomainObject.dll</HintPath>
+    </Reference>
+    <Reference Include="P21.DomainObject.UDF">
+      <HintPath>..\..\..\Check_Overstocked\Check_Overstocked\bin\Debug\P21.DomainObject.UDF.dll</HintPath>
+    </Reference>
+    <Reference Include="P21.Extensions">
+      <HintPath>..\..\..\Check_Overstocked\Check_Overstocked\bin\Debug\P21.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="P21.UI.Service.Model">
+      <HintPath>..\..\..\Check_Overstocked\Check_Overstocked\bin\Debug\P21.UI.Service.Model.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Set_Acknowledged_for_POs.cs" />
+    <Compile Include="Set_Acknowledged_for_POs_Callback.cs" />
+    <Compile Include="Set_Scheduled_for_POs.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
