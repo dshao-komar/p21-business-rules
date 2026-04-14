@@ -23,8 +23,8 @@ The scheduled rule is intentionally separate from the acknowledged/shipped rule 
 ### Rule Setup
 
 - Rule Name: `Set_Scheduled_for_POs`
-- Rule Type: field-edit business rule
-- Apply Rule On: PO header/user-defined field area
+- Rule Type: `Validator`
+- Apply Rule On: `Field Edit`
 - Multi-Row: checked
 - DLL path: `C:\Users\DanShao\.vscode\p21_business_rules\Existing Rules\Set_Acknowledged_for_POs.dll`
 - Callback Rule: none
