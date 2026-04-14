@@ -130,6 +130,18 @@ The P21 database can be queried directly from VS Code using the MS SQL extension
 
 For every business-rule folder, the local `AGENTS.md` must document the Prophet 21 setup in enough detail that someone can configure the rule without reverse-engineering the code.
 
+Rule setup values must be verified against source-of-truth documentation before they are written:
+
+- Do not infer Prophet 21 setup labels from code behavior, class names, or plain-English descriptions.
+- `Rule Type`, `Apply Rule On`, Multi-Row behavior, callback setup, and field selector/trigger instructions must use the exact valid labels from the official/reference material.
+- Acceptable references are:
+  - `C:\Users\DanShao\.vscode\p21_business_rules\Rules References\DynaChange Rules Guide.pdf`
+  - the bundled `AllFiles - *.cs` P21 extension source files under `Rules References`
+  - an existing confirmed local rule `AGENTS.md` only when it is clearly documenting the same P21 setup pattern
+  - explicit user confirmation in the current thread
+- If a setup value cannot be verified from those references, write `NEEDS CONFIRMATION` for that value instead of guessing.
+- When adding or changing setup values, include a short `Setup References` section in the rule-folder `AGENTS.md` naming the reference used for `Rule Type` and `Apply Rule On`.
+
 Minimum required setup details:
 
 - `Rule Name`
