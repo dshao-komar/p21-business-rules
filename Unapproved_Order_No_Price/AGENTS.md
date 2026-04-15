@@ -96,20 +96,18 @@ This rule runs on `Save`, not `Field Edit`, so there is no single field-specific
 
 This rule runs when `d_oe_header.approved` is edited.
 
-Current diagnostic status:
-
-- diagnostic build version: `1.0.1.0`
-- `EnableApprovedCheckDiagnostics` is enabled in code for live testing
-- when the rule fires on the Approved edit, it intentionally rejects the edit and shows trigger/data diagnostics
-- the rule description should show `DIAGNOSTIC BUILD` in Prophet 21 after the updated DLL is attached
-- if no diagnostic appears when Approved is checked, the rule is not firing or is not attached to the active Approved field trigger
-- remove or set `EnableApprovedCheckDiagnostics` to `false` after the live trigger/data issue is resolved
-
 - checking `approved` is allowed when all selected lines have a nonblank, nonzero `unit_price`
 - checking `approved` is also allowed when `d_oe_header.ufc_oe_hdr_ud_manager_approved = Y`
 - checking `approved` is blocked when any selected line is missing pricing and Manager Approved is not checked
 - unchecking `approved` is allowed silently
 - the rule rejects the field edit through `RuleResult`; it does not write back to `approved`
+
+Important implementation detail confirmed by live diagnostics:
+
+- during the `approved` field-edit event, P21 passes the prior value in `Data.TriggerOriginalValue`
+- `d_oe_header.approved` in the multi-row dataset may still show the prior value, not the attempted checked value
+- the validator therefore treats `Data.TriggerOriginalValue = N` as an attempted approval check and `Data.TriggerOriginalValue = Y` as an uncheck/already-approved edit
+- production build version: `1.0.2.0`
 
 Blocked message:
 

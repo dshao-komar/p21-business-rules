@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using P21.Extensions.BusinessRule;
 
 namespace Unapproved_Order_No_Price
@@ -209,7 +208,6 @@ namespace Unapproved_Order_No_Price
         private const string ApprovedFieldName = "approved";
         private const string ManagerApprovedFieldName = "ufc_oe_hdr_ud_manager_approved";
         private const string UnitPriceFieldName = "unit_price";
-        private static readonly bool EnableApprovedCheckDiagnostics = true;
 
         public override string GetName()
         {
@@ -218,7 +216,7 @@ namespace Unapproved_Order_No_Price
 
         public override string GetDescription()
         {
-            return "DIAGNOSTIC BUILD: blocks Approved edits and prints trigger/data details while testing.";
+            return "Blocks approving an order with missing pricing unless Manager Approved is checked.";
         }
 
         public override RuleResult Execute()
@@ -253,24 +251,9 @@ namespace Unapproved_Order_No_Price
                 return result;
             }
 
-            string approvedValue = GetHeaderFlag(dataSet, ApprovedFieldName);
             string originalValue = NormalizeYN(Data.TriggerOriginalValue);
 
-            if (EnableApprovedCheckDiagnostics)
-            {
-                result.Success = false;
-                result.Message = BuildApprovedDiagnosticMessage(dataSet, trigger, approvedValue, originalValue);
-                return result;
-            }
-
-            if (approvedValue == originalValue)
-            {
-                result.Success = true;
-                result.Message = string.Empty;
-                return result;
-            }
-
-            if (approvedValue != "Y" ||
+            if (originalValue == "Y" ||
                 GetHeaderFlag(dataSet, ManagerApprovedFieldName) == "Y" ||
                 !HasMissingPrice(dataSet.Tables[LineTableName]))
             {
@@ -282,63 +265,6 @@ namespace Unapproved_Order_No_Price
             result.Success = false;
             result.Message = "This order cannot be approved withouth manager approval";
             return result;
-        }
-
-        private string BuildApprovedDiagnosticMessage(DataSet dataSet, string trigger, string approvedValue, string originalValue)
-        {
-            StringBuilder message = new StringBuilder();
-            string managerApprovedValue = GetHeaderFlag(dataSet, ManagerApprovedFieldName);
-            DataTable lineTable = dataSet.Tables.Contains(LineTableName) ? dataSet.Tables[LineTableName] : null;
-
-            message.AppendLine("DIAGNOSTIC: Validate_Approved_for_Unpriced_Order fired.");
-            message.AppendLine("This diagnostic intentionally blocks the Approved edit while testing.");
-            message.AppendLine("Rule Name: " + GetName());
-            message.AppendLine("TriggerTable: " + NullDisplay(Data.TriggerTable));
-            message.AppendLine("TriggerColumn: " + NullDisplay(trigger));
-            message.AppendLine("TriggerOriginalValue raw: " + NullDisplay(Data.TriggerOriginalValue));
-            message.AppendLine("TriggerOriginalValue normalized: " + originalValue);
-            message.AppendLine("Current d_oe_header.approved normalized: " + approvedValue);
-            message.AppendLine("Current d_oe_header.ufc_oe_hdr_ud_manager_approved normalized: " + managerApprovedValue);
-            message.AppendLine("Approved trigger recognized: " + IsApprovedTrigger(trigger).ToString(CultureInfo.InvariantCulture));
-            message.AppendLine("Dataset tables: " + string.Join(", ", dataSet.Tables.Cast<DataTable>().Select(table => table.TableName).ToArray()));
-
-            if (lineTable == null)
-            {
-                message.AppendLine("Line table present: false");
-                return message.ToString();
-            }
-
-            message.AppendLine("Line table present: true");
-            message.AppendLine("Line row count: " + lineTable.Rows.Count.ToString(CultureInfo.InvariantCulture));
-            message.AppendLine("Unit price column present: " + lineTable.Columns.Contains(UnitPriceFieldName).ToString(CultureInfo.InvariantCulture));
-
-            if (!lineTable.Columns.Contains(UnitPriceFieldName))
-                return message.ToString();
-
-            int missingCount = 0;
-            foreach (DataRow row in lineTable.Rows)
-            {
-                if (IsMissingPrice(row[UnitPriceFieldName]))
-                    missingCount++;
-            }
-
-            message.AppendLine("Missing price row count: " + missingCount.ToString(CultureInfo.InvariantCulture));
-            message.AppendLine("First unit_price values:");
-
-            int sampleCount = Math.Min(lineTable.Rows.Count, 5);
-            for (int i = 0; i < sampleCount; i++)
-            {
-                object rawValue = lineTable.Rows[i][UnitPriceFieldName];
-                message.AppendLine(
-                    "Row " + i.ToString(CultureInfo.InvariantCulture) +
-                    ": raw=" + NullDisplay(rawValue) +
-                    ", missing=" + IsMissingPrice(rawValue).ToString(CultureInfo.InvariantCulture));
-            }
-
-            if (sampleCount == 0)
-                message.AppendLine("(no selected line rows)");
-
-            return message.ToString();
         }
 
         private static string ValidateFieldEditDataset(DataSet dataSet)
@@ -445,15 +371,6 @@ namespace Unapproved_Order_No_Price
                 return boolValue ? "Y" : "N";
 
             return trimmed.ToUpperInvariant();
-        }
-
-        private static string NullDisplay(object value)
-        {
-            if (value == null || value == DBNull.Value)
-                return "<null>";
-
-            string text = Convert.ToString(value, CultureInfo.InvariantCulture);
-            return string.IsNullOrWhiteSpace(text) ? "<blank>" : text;
         }
     }
 }
