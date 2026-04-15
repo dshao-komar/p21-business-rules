@@ -98,8 +98,10 @@ This rule runs when `d_oe_header.approved` is edited.
 
 Current diagnostic status:
 
+- diagnostic build version: `1.0.1.0`
 - `EnableApprovedCheckDiagnostics` is enabled in code for live testing
 - when the rule fires on the Approved edit, it intentionally rejects the edit and shows trigger/data diagnostics
+- the rule description should show `DIAGNOSTIC BUILD` in Prophet 21 after the updated DLL is attached
 - if no diagnostic appears when Approved is checked, the rule is not firing or is not attached to the active Approved field trigger
 - remove or set `EnableApprovedCheckDiagnostics` to `false` after the live trigger/data issue is resolved
 

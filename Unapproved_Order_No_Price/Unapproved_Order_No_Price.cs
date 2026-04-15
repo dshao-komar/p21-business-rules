@@ -218,7 +218,7 @@ namespace Unapproved_Order_No_Price
 
         public override string GetDescription()
         {
-            return "Blocks checking Approved unless Manager Approved is checked.";
+            return "DIAGNOSTIC BUILD: blocks Approved edits and prints trigger/data details while testing.";
         }
 
         public override RuleResult Execute()
