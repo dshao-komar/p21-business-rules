@@ -46,6 +46,10 @@ When changing this project:
 4. Be careful with field-edit validators:
    - direct writeback to the same field during edit can freeze the screen
    - prefer validator rejection when blocking a field edit
+   - for checkbox edits, the multi-row dataset may still contain the prior/current value during `Field Edit`; use `Data.TriggerOriginalValue` plus `Data.TriggerTable` / `Data.TriggerColumn` to infer the attempted change
+   - live sales-order testing confirmed `d_oe_header.approved` still showed `N` while the user was attempting to check it, while `Data.TriggerOriginalValue` was `N`
+   - if two active field-edit validators trigger on the same checkbox, P21 may not present both messages and one rule can effectively mask the other; prefer one combined validator for a shared trigger field
+   - when replacing or debugging a DLL, bump `AssemblyVersion` / `AssemblyFileVersion` so P21 does not appear to reuse a cached or previously attached assembly
 5. Keep using `Session.UserID` for the validation rule unless the user asks to change it.
 6. If changing messages, keep the business wording aligned with the current live process.
 7. Rebuild the DLL after any code change.

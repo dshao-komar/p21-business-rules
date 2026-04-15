@@ -99,19 +99,36 @@ This rule runs when `d_oe_header.approved` is edited.
 - checking `approved` is allowed when all selected lines have a nonblank, nonzero `unit_price`
 - checking `approved` is also allowed when `d_oe_header.ufc_oe_hdr_ud_manager_approved = Y`
 - checking `approved` is blocked when any selected line is missing pricing and Manager Approved is not checked
+- checking `approved` is also blocked when `oe_hdr_terms = Credit Card` and any required credit-card detail is blank
 - unchecking `approved` is allowed silently
 - the rule rejects the field edit through `RuleResult`; it does not write back to `approved`
+- this rule replaces the active behavior of the older `Existing Rules\OE_CreditCard.dll` rule on the `approved` trigger; keep the old credit-card rule inactive when this combined validator is active
 
 Important implementation detail confirmed by live diagnostics:
 
 - during the `approved` field-edit event, P21 passes the prior value in `Data.TriggerOriginalValue`
 - `d_oe_header.approved` in the multi-row dataset may still show the prior value, not the attempted checked value
 - the validator therefore treats `Data.TriggerOriginalValue = N` as an attempted approval check and `Data.TriggerOriginalValue = Y` as an uncheck/already-approved edit
-- production build version: `1.0.2.0`
+- production build version: `1.0.3.0`
+
+The credit-card validation mirrors `Existing Rules\OE_CreditCard.dll`:
+
+- terms field: `d_oe_header.oe_hdr_terms`
+- credit-card detail fields:
+  - `d_oe_header.cc_name`
+  - `d_oe_header.cc_creditcard_number`
+  - `d_oe_header.cc_expiration_date`
+- when terms equal `Credit Card` and Approved is being checked, the first blank detail blocks approval with the same message pattern as the old DLL
 
 Blocked message:
 
 `This order cannot be approved withouth manager approval`
+
+Credit-card blocked messages:
+
+- `No credit card name has been specified. Order must remain Unapproved until all credit card details are entered.`
+- `No credit card number has been specified. Order must remain Unapproved until all credit card details are entered.`
+- `No credit card expiration date has been specified. Order must remain Unapproved until all credit card details are entered.`
 
 ### P21 Configuration Summary
 
@@ -128,6 +145,10 @@ Select these fields for the field-edit rule:
 
 - `d_oe_header.approved`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved`
+- `d_oe_header.oe_hdr_terms`
+- `d_oe_header.cc_name`
+- `d_oe_header.cc_creditcard_number`
+- `d_oe_header.cc_expiration_date`
 - `d_dw_oe_line_dataentry.unit_price`
 
 ### Triggered Fields

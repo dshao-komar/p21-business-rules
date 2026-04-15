@@ -208,6 +208,10 @@ namespace Unapproved_Order_No_Price
         private const string ApprovedFieldName = "approved";
         private const string ManagerApprovedFieldName = "ufc_oe_hdr_ud_manager_approved";
         private const string UnitPriceFieldName = "unit_price";
+        private const string TermsFieldName = "oe_hdr_terms";
+        private const string CreditCardNameFieldName = "cc_name";
+        private const string CreditCardNumberFieldName = "cc_creditcard_number";
+        private const string CreditCardExpirationDateFieldName = "cc_expiration_date";
 
         public override string GetName()
         {
@@ -216,7 +220,7 @@ namespace Unapproved_Order_No_Price
 
         public override string GetDescription()
         {
-            return "Blocks approving an order with missing pricing unless Manager Approved is checked.";
+            return "Blocks approval for missing pricing or incomplete credit-card details.";
         }
 
         public override RuleResult Execute()
@@ -253,8 +257,22 @@ namespace Unapproved_Order_No_Price
 
             string originalValue = NormalizeYN(Data.TriggerOriginalValue);
 
-            if (originalValue == "Y" ||
-                GetHeaderFlag(dataSet, ManagerApprovedFieldName) == "Y" ||
+            if (originalValue == "Y")
+            {
+                result.Success = true;
+                result.Message = string.Empty;
+                return result;
+            }
+
+            string missingCreditCardDetail = GetMissingCreditCardDetail(dataSet);
+            if (!string.IsNullOrWhiteSpace(missingCreditCardDetail))
+            {
+                result.Success = false;
+                result.Message = "No " + missingCreditCardDetail + " has been specified. Order must remain Unapproved until all credit card details are entered.";
+                return result;
+            }
+
+            if (GetHeaderFlag(dataSet, ManagerApprovedFieldName) == "Y" ||
                 !HasMissingPrice(dataSet.Tables[LineTableName]))
             {
                 result.Success = true;
@@ -287,6 +305,18 @@ namespace Unapproved_Order_No_Price
             if (!headerTable.Columns.Contains(ManagerApprovedFieldName))
                 return "d_oe_header.ufc_oe_hdr_ud_manager_approved must be selected in Field Selector.";
 
+            if (!headerTable.Columns.Contains(TermsFieldName))
+                return "d_oe_header.oe_hdr_terms must be selected in Field Selector.";
+
+            if (!headerTable.Columns.Contains(CreditCardNameFieldName))
+                return "d_oe_header.cc_name must be selected in Field Selector.";
+
+            if (!headerTable.Columns.Contains(CreditCardNumberFieldName))
+                return "d_oe_header.cc_creditcard_number must be selected in Field Selector.";
+
+            if (!headerTable.Columns.Contains(CreditCardExpirationDateFieldName))
+                return "d_oe_header.cc_expiration_date must be selected in Field Selector.";
+
             if (!lineTable.Columns.Contains(UnitPriceFieldName))
                 return "d_dw_oe_line_dataentry.unit_price must be selected in Field Selector.";
 
@@ -300,6 +330,27 @@ namespace Unapproved_Order_No_Price
 
             return trigger.Equals(ApprovedFieldName, StringComparison.OrdinalIgnoreCase) ||
                    trigger.Equals(HeaderTableName + "." + ApprovedFieldName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string GetMissingCreditCardDetail(DataSet dataSet)
+        {
+            string terms = GetHeaderString(dataSet, TermsFieldName);
+            if (string.IsNullOrWhiteSpace(terms) ||
+                !terms.Equals("Credit Card", StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(GetHeaderString(dataSet, CreditCardNameFieldName)))
+                return "credit card name";
+
+            if (string.IsNullOrWhiteSpace(GetHeaderString(dataSet, CreditCardNumberFieldName)))
+                return "credit card number";
+
+            if (string.IsNullOrWhiteSpace(GetHeaderString(dataSet, CreditCardExpirationDateFieldName)))
+                return "credit card expiration date";
+
+            return string.Empty;
         }
 
         private static bool HasMissingPrice(DataTable lineTable)
@@ -341,8 +392,16 @@ namespace Unapproved_Order_No_Price
 
         private static string GetHeaderFlag(DataSet dataSet, string columnName)
         {
+            return NormalizeYN(GetHeaderString(dataSet, columnName));
+        }
+
+        private static string GetHeaderString(DataSet dataSet, string columnName)
+        {
             DataTable headerTable = dataSet.Tables[HeaderTableName];
-            return NormalizeYN(Convert.ToString(headerTable.Rows[0][columnName], CultureInfo.InvariantCulture));
+            if (!headerTable.Columns.Contains(columnName) || headerTable.Rows.Count == 0 || headerTable.Rows[0][columnName] == DBNull.Value)
+                return string.Empty;
+
+            return Convert.ToString(headerTable.Rows[0][columnName], CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
         private static string NormalizeYN(string value)
