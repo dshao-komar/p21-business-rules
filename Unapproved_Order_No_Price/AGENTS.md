@@ -34,6 +34,10 @@ These fields are used by the rules:
 
 - `d_oe_header.approved`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved`
+- `d_oe_header.oe_hdr_terms`
+- `d_oe_payment_details.cc_creditcard_number`
+- `d_oe_payment_details.cc_expiration_date`
+- `d_oe_payment_details.cc_name`
 - `d_dw_oe_line_dataentry.unit_price`
 - `d_dw_oe_line_dataentry.oe_order_item_id`
 
@@ -109,15 +113,15 @@ Important implementation detail confirmed by live diagnostics:
 - during the `approved` field-edit event, P21 passes the prior value in `Data.TriggerOriginalValue`
 - `d_oe_header.approved` in the multi-row dataset may still show the prior value, not the attempted checked value
 - the validator therefore treats `Data.TriggerOriginalValue = N` as an attempted approval check and `Data.TriggerOriginalValue = Y` as an uncheck/already-approved edit
-- production build version: `1.0.4.0`
+- production build version: `1.0.5.0`
 
 The credit-card validation mirrors `Existing Rules\OE_CreditCard.dll`:
 
 - terms field: `d_oe_header.oe_hdr_terms`
 - credit-card detail fields:
-  - `d_oe_header.cc_name`
-  - `d_oe_header.cc_creditcard_number`
-  - `d_oe_header.cc_expiration_date`
+  - `d_oe_payment_details.cc_name`
+  - `d_oe_payment_details.cc_creditcard_number`
+  - `d_oe_payment_details.cc_expiration_date`
 - when terms equal `Credit Card` and Approved is being checked, the first blank detail blocks approval with the same message pattern as the old DLL
 
 Blocked message:
@@ -146,9 +150,9 @@ Select these fields for the field-edit rule:
 - `d_oe_header.approved`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved`
 - `d_oe_header.oe_hdr_terms`
-- `d_oe_header.cc_name`
-- `d_oe_header.cc_creditcard_number`
-- `d_oe_header.cc_expiration_date`
+- `d_oe_payment_details.cc_creditcard_number`
+- `d_oe_payment_details.cc_expiration_date`
+- `d_oe_payment_details.cc_name`
 - `d_dw_oe_line_dataentry.unit_price`
 
 ### Triggered Fields

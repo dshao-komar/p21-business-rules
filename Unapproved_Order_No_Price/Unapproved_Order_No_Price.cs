@@ -205,6 +205,7 @@ namespace Unapproved_Order_No_Price
     {
         private const string HeaderTableName = "d_oe_header";
         private const string LineTableName = "d_dw_oe_line_dataentry";
+        private const string PaymentDetailsTableName = "d_oe_payment_details";
         private const string ApprovedFieldName = "approved";
         private const string ManagerApprovedFieldName = "ufc_oe_hdr_ud_manager_approved";
         private const string UnitPriceFieldName = "unit_price";
@@ -293,8 +294,12 @@ namespace Unapproved_Order_No_Price
             if (!dataSet.Tables.Contains(LineTableName))
                 return "The multi-row dataset is missing d_dw_oe_line_dataentry.";
 
+            if (!dataSet.Tables.Contains(PaymentDetailsTableName))
+                return "The multi-row dataset is missing d_oe_payment_details.";
+
             DataTable headerTable = dataSet.Tables[HeaderTableName];
             DataTable lineTable = dataSet.Tables[LineTableName];
+            DataTable paymentDetailsTable = dataSet.Tables[PaymentDetailsTableName];
 
             if (headerTable.Rows.Count == 0)
                 return "The multi-row dataset has no d_oe_header row.";
@@ -308,14 +313,14 @@ namespace Unapproved_Order_No_Price
             if (!headerTable.Columns.Contains(TermsFieldName))
                 return "d_oe_header.oe_hdr_terms must be selected in Field Selector.";
 
-            if (!headerTable.Columns.Contains(CreditCardNameFieldName))
-                return "d_oe_header.cc_name must be selected in Field Selector.";
+            if (!paymentDetailsTable.Columns.Contains(CreditCardNameFieldName))
+                return "d_oe_payment_details.cc_name must be selected in Field Selector.";
 
-            if (!headerTable.Columns.Contains(CreditCardNumberFieldName))
-                return "d_oe_header.cc_creditcard_number must be selected in Field Selector.";
+            if (!paymentDetailsTable.Columns.Contains(CreditCardNumberFieldName))
+                return "d_oe_payment_details.cc_creditcard_number must be selected in Field Selector.";
 
-            if (!headerTable.Columns.Contains(CreditCardExpirationDateFieldName))
-                return "d_oe_header.cc_expiration_date must be selected in Field Selector.";
+            if (!paymentDetailsTable.Columns.Contains(CreditCardExpirationDateFieldName))
+                return "d_oe_payment_details.cc_expiration_date must be selected in Field Selector.";
 
             if (!lineTable.Columns.Contains(UnitPriceFieldName))
                 return "d_dw_oe_line_dataentry.unit_price must be selected in Field Selector.";
@@ -341,13 +346,13 @@ namespace Unapproved_Order_No_Price
                 return string.Empty;
             }
 
-            if (string.IsNullOrWhiteSpace(GetHeaderString(dataSet, CreditCardNameFieldName)))
+            if (string.IsNullOrWhiteSpace(GetPaymentDetailString(dataSet, CreditCardNameFieldName)))
                 return "credit card name";
 
-            if (string.IsNullOrWhiteSpace(GetHeaderString(dataSet, CreditCardNumberFieldName)))
+            if (string.IsNullOrWhiteSpace(GetPaymentDetailString(dataSet, CreditCardNumberFieldName)))
                 return "credit card number";
 
-            if (string.IsNullOrWhiteSpace(GetHeaderString(dataSet, CreditCardExpirationDateFieldName)))
+            if (string.IsNullOrWhiteSpace(GetPaymentDetailString(dataSet, CreditCardExpirationDateFieldName)))
                 return "credit card expiration date";
 
             return string.Empty;
@@ -402,6 +407,15 @@ namespace Unapproved_Order_No_Price
                 return string.Empty;
 
             return Convert.ToString(headerTable.Rows[0][columnName], CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
+        private static string GetPaymentDetailString(DataSet dataSet, string columnName)
+        {
+            DataTable paymentDetailsTable = dataSet.Tables[PaymentDetailsTableName];
+            if (!paymentDetailsTable.Columns.Contains(columnName) || paymentDetailsTable.Rows.Count == 0 || paymentDetailsTable.Rows[0][columnName] == DBNull.Value)
+                return string.Empty;
+
+            return Convert.ToString(paymentDetailsTable.Rows[0][columnName], CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
         private static string NormalizeYN(string value)
