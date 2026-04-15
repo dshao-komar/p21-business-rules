@@ -109,7 +109,7 @@ Important implementation detail confirmed by live diagnostics:
 - during the `approved` field-edit event, P21 passes the prior value in `Data.TriggerOriginalValue`
 - `d_oe_header.approved` in the multi-row dataset may still show the prior value, not the attempted checked value
 - the validator therefore treats `Data.TriggerOriginalValue = N` as an attempted approval check and `Data.TriggerOriginalValue = Y` as an uncheck/already-approved edit
-- production build version: `1.0.3.0`
+- production build version: `1.0.4.0`
 
 The credit-card validation mirrors `Existing Rules\OE_CreditCard.dll`:
 
@@ -122,7 +122,7 @@ The credit-card validation mirrors `Existing Rules\OE_CreditCard.dll`:
 
 Blocked message:
 
-`This order cannot be approved withouth manager approval`
+`This order cannot be approved without manager approval`
 
 Credit-card blocked messages:
 

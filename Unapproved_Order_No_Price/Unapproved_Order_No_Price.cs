@@ -281,7 +281,7 @@ namespace Unapproved_Order_No_Price
             }
 
             result.Success = false;
-            result.Message = "This order cannot be approved withouth manager approval";
+            result.Message = "This order cannot be approved without manager approval";
             return result;
         }
 
