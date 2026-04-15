@@ -12,7 +12,7 @@ Intent:
   - force `d_oe_header.approved` to `N`
   - show a warning message
 - if Manager Approved is checked, allow the order to remain approved
-- block users from checking `d_oe_header.approved` unless Manager Approved is checked
+- block users from checking `d_oe_header.approved` when any selected line is missing pricing unless Manager Approved is checked
 
 `d_oe_header.ufc_oe_hdr_ud_manager_approved` is the manual approval override for unpriced orders.
 
@@ -96,7 +96,9 @@ This rule runs on `Save`, not `Field Edit`, so there is no single field-specific
 
 This rule runs when `d_oe_header.approved` is edited.
 
-- checking `approved` is allowed only when `d_oe_header.ufc_oe_hdr_ud_manager_approved = Y`
+- checking `approved` is allowed when all selected lines have a nonblank, nonzero `unit_price`
+- checking `approved` is also allowed when `d_oe_header.ufc_oe_hdr_ud_manager_approved = Y`
+- checking `approved` is blocked when any selected line is missing pricing and Manager Approved is not checked
 - unchecking `approved` is allowed silently
 - the rule rejects the field edit through `RuleResult`; it does not write back to `approved`
 
@@ -119,6 +121,7 @@ Select these fields for the field-edit rule:
 
 - `d_oe_header.approved`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved`
+- `d_dw_oe_line_dataentry.unit_price`
 
 ### Triggered Fields
 

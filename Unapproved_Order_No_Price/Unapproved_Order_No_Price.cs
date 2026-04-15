@@ -204,8 +204,10 @@ namespace Unapproved_Order_No_Price
     public class Validate_Approved_for_Unpriced_Order : P21.Extensions.BusinessRule.Rule
     {
         private const string HeaderTableName = "d_oe_header";
+        private const string LineTableName = "d_dw_oe_line_dataentry";
         private const string ApprovedFieldName = "approved";
         private const string ManagerApprovedFieldName = "ufc_oe_hdr_ud_manager_approved";
+        private const string UnitPriceFieldName = "unit_price";
 
         public override string GetName()
         {
@@ -242,8 +244,7 @@ namespace Unapproved_Order_No_Price
             }
 
             string trigger = Data.TriggerColumn == null ? string.Empty : Data.TriggerColumn.Trim();
-            if (!string.IsNullOrWhiteSpace(trigger) &&
-                !trigger.Equals(ApprovedFieldName, StringComparison.OrdinalIgnoreCase))
+            if (!IsApprovedTrigger(trigger))
             {
                 result.Success = true;
                 result.Message = string.Empty;
@@ -260,7 +261,9 @@ namespace Unapproved_Order_No_Price
                 return result;
             }
 
-            if (approvedValue != "Y" || GetHeaderFlag(dataSet, ManagerApprovedFieldName) == "Y")
+            if (approvedValue != "Y" ||
+                GetHeaderFlag(dataSet, ManagerApprovedFieldName) == "Y" ||
+                !HasMissingPrice(dataSet.Tables[LineTableName]))
             {
                 result.Success = true;
                 result.Message = string.Empty;
@@ -277,7 +280,11 @@ namespace Unapproved_Order_No_Price
             if (!dataSet.Tables.Contains(HeaderTableName))
                 return "The multi-row dataset is missing d_oe_header.";
 
+            if (!dataSet.Tables.Contains(LineTableName))
+                return "The multi-row dataset is missing d_dw_oe_line_dataentry.";
+
             DataTable headerTable = dataSet.Tables[HeaderTableName];
+            DataTable lineTable = dataSet.Tables[LineTableName];
 
             if (headerTable.Rows.Count == 0)
                 return "The multi-row dataset has no d_oe_header row.";
@@ -288,7 +295,56 @@ namespace Unapproved_Order_No_Price
             if (!headerTable.Columns.Contains(ManagerApprovedFieldName))
                 return "d_oe_header.ufc_oe_hdr_ud_manager_approved must be selected in Field Selector.";
 
+            if (!lineTable.Columns.Contains(UnitPriceFieldName))
+                return "d_dw_oe_line_dataentry.unit_price must be selected in Field Selector.";
+
             return string.Empty;
+        }
+
+        private static bool IsApprovedTrigger(string trigger)
+        {
+            if (string.IsNullOrWhiteSpace(trigger))
+                return true;
+
+            return trigger.Equals(ApprovedFieldName, StringComparison.OrdinalIgnoreCase) ||
+                   trigger.Equals(HeaderTableName + "." + ApprovedFieldName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool HasMissingPrice(DataTable lineTable)
+        {
+            foreach (DataRow row in lineTable.Rows)
+            {
+                if (IsMissingPrice(row[UnitPriceFieldName]))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsMissingPrice(object value)
+        {
+            if (value == null || value == DBNull.Value)
+                return true;
+
+            string text = Convert.ToString(value, CultureInfo.InvariantCulture);
+            if (string.IsNullOrWhiteSpace(text))
+                return true;
+
+            decimal price;
+            try
+            {
+                price = Convert.ToDecimal(value, CultureInfo.InvariantCulture);
+            }
+            catch
+            {
+                if (!decimal.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out price) &&
+                    !decimal.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out price))
+                {
+                    return true;
+                }
+            }
+
+            return price == 0m;
         }
 
         private static string GetHeaderFlag(DataSet dataSet, string columnName)
