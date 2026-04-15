@@ -96,6 +96,13 @@ This rule runs on `Save`, not `Field Edit`, so there is no single field-specific
 
 This rule runs when `d_oe_header.approved` is edited.
 
+Current diagnostic status:
+
+- `EnableApprovedCheckDiagnostics` is enabled in code for live testing
+- when the rule fires on the Approved edit, it intentionally rejects the edit and shows trigger/data diagnostics
+- if no diagnostic appears when Approved is checked, the rule is not firing or is not attached to the active Approved field trigger
+- remove or set `EnableApprovedCheckDiagnostics` to `false` after the live trigger/data issue is resolved
+
 - checking `approved` is allowed when all selected lines have a nonblank, nonzero `unit_price`
 - checking `approved` is also allowed when `d_oe_header.ufc_oe_hdr_ud_manager_approved = Y`
 - checking `approved` is blocked when any selected line is missing pricing and Manager Approved is not checked
