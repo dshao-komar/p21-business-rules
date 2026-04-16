@@ -15,6 +15,9 @@ namespace Unapproved_Order_No_Price
         private const string ManagerApprovedFieldName = "ufc_oe_hdr_ud_manager_approved";
         private const string UnitPriceFieldName = "unit_price";
         private const string OrderItemIdFieldName = "oe_order_item_id";
+        private const string DetailTypeFieldName = "detail_type";
+        private const string CancelFlagFieldName = "cancel_flag";
+        private const string DeleteFlagFieldName = "delete_flag";
 
         public override string GetName()
         {
@@ -98,6 +101,15 @@ namespace Unapproved_Order_No_Price
             if (!lineTable.Columns.Contains(OrderItemIdFieldName))
                 return "d_dw_oe_line_dataentry.oe_order_item_id must be selected in Field Selector.";
 
+            if (!lineTable.Columns.Contains(DetailTypeFieldName))
+                return "d_dw_oe_line_dataentry.detail_type must be selected in Field Selector.";
+
+            if (!lineTable.Columns.Contains(CancelFlagFieldName))
+                return "d_dw_oe_line_dataentry.cancel_flag must be selected in Field Selector.";
+
+            if (!lineTable.Columns.Contains(DeleteFlagFieldName))
+                return "d_dw_oe_line_dataentry.delete_flag must be selected in Field Selector.";
+
             return string.Empty;
         }
 
@@ -107,7 +119,7 @@ namespace Unapproved_Order_No_Price
 
             foreach (DataRow row in lineTable.Rows)
             {
-                if (IsMissingPrice(row[UnitPriceFieldName]))
+                if (ShouldEvaluateLine(row) && IsMissingPrice(row[UnitPriceFieldName]))
                     itemIds.Add(GetString(row, OrderItemIdFieldName));
             }
 
@@ -140,6 +152,18 @@ namespace Unapproved_Order_No_Price
             return price == 0m;
         }
 
+        private static bool ShouldEvaluateLine(DataRow row)
+        {
+            int detailType;
+            if (!TryGetInt(row, DetailTypeFieldName, out detailType) || detailType != 0)
+                return false;
+
+            if (IsYes(row, CancelFlagFieldName) || IsYes(row, DeleteFlagFieldName))
+                return false;
+
+            return true;
+        }
+
         private static string BuildMissingPriceMessage(IList<string> missingPriceItemIds)
         {
             if (missingPriceItemIds.Count > 1)
@@ -170,6 +194,29 @@ namespace Unapproved_Order_No_Price
                 return string.Empty;
 
             return Convert.ToString(row[columnName], CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
+        private static bool TryGetInt(DataRow row, string columnName, out int value)
+        {
+            value = 0;
+
+            if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
+                return false;
+
+            try
+            {
+                value = Convert.ToInt32(row[columnName], CultureInfo.InvariantCulture);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool IsYes(DataRow row, string columnName)
+        {
+            return NormalizeYN(GetString(row, columnName)) == "Y";
         }
 
         private static string NormalizeYN(string value)
@@ -209,6 +256,9 @@ namespace Unapproved_Order_No_Price
         private const string ApprovedFieldName = "approved";
         private const string ManagerApprovedFieldName = "ufc_oe_hdr_ud_manager_approved";
         private const string UnitPriceFieldName = "unit_price";
+        private const string DetailTypeFieldName = "detail_type";
+        private const string CancelFlagFieldName = "cancel_flag";
+        private const string DeleteFlagFieldName = "delete_flag";
         private const string TermsFieldName = "oe_hdr_terms";
         private const string CreditCardNameFieldName = "cc_name";
         private const string CreditCardNumberFieldName = "cc_creditcard_number";
@@ -325,6 +375,15 @@ namespace Unapproved_Order_No_Price
             if (!lineTable.Columns.Contains(UnitPriceFieldName))
                 return "d_dw_oe_line_dataentry.unit_price must be selected in Field Selector.";
 
+            if (!lineTable.Columns.Contains(DetailTypeFieldName))
+                return "d_dw_oe_line_dataentry.detail_type must be selected in Field Selector.";
+
+            if (!lineTable.Columns.Contains(CancelFlagFieldName))
+                return "d_dw_oe_line_dataentry.cancel_flag must be selected in Field Selector.";
+
+            if (!lineTable.Columns.Contains(DeleteFlagFieldName))
+                return "d_dw_oe_line_dataentry.delete_flag must be selected in Field Selector.";
+
             return string.Empty;
         }
 
@@ -362,7 +421,7 @@ namespace Unapproved_Order_No_Price
         {
             foreach (DataRow row in lineTable.Rows)
             {
-                if (IsMissingPrice(row[UnitPriceFieldName]))
+                if (ShouldEvaluateLine(row) && IsMissingPrice(row[UnitPriceFieldName]))
                     return true;
             }
 
@@ -395,6 +454,18 @@ namespace Unapproved_Order_No_Price
             return price == 0m;
         }
 
+        private static bool ShouldEvaluateLine(DataRow row)
+        {
+            int detailType;
+            if (!TryGetInt(row, DetailTypeFieldName, out detailType) || detailType != 0)
+                return false;
+
+            if (IsYes(row, CancelFlagFieldName) || IsYes(row, DeleteFlagFieldName))
+                return false;
+
+            return true;
+        }
+
         private static string GetHeaderFlag(DataSet dataSet, string columnName)
         {
             return NormalizeYN(GetHeaderString(dataSet, columnName));
@@ -416,6 +487,37 @@ namespace Unapproved_Order_No_Price
                 return string.Empty;
 
             return Convert.ToString(paymentDetailsTable.Rows[0][columnName], CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
+        private static bool TryGetInt(DataRow row, string columnName, out int value)
+        {
+            value = 0;
+
+            if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
+                return false;
+
+            try
+            {
+                value = Convert.ToInt32(row[columnName], CultureInfo.InvariantCulture);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool IsYes(DataRow row, string columnName)
+        {
+            return NormalizeYN(GetString(row, columnName)) == "Y";
+        }
+
+        private static string GetString(DataRow row, string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
+                return string.Empty;
+
+            return Convert.ToString(row[columnName], CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
         private static string NormalizeYN(string value)
