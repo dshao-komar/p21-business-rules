@@ -12,3 +12,4 @@ Check_Overstocked/references/*.dll
 *.user
 *.suo
 *.cache
+.env
