@@ -16,7 +16,7 @@ namespace Unapproved_Order_No_Price
         private const string UnitPriceFieldName = "unit_price";
         private const string OrderItemIdFieldName = "oe_order_item_id";
         private const string DetailTypeFieldName = "detail_type";
-        private const string CancelFlagFieldName = "cancel_flag";
+        private const string CancelFlagFieldName = "oe_line_cancel_flag";
         private const string DeleteFlagFieldName = "delete_flag";
 
         public override string GetName()
@@ -105,7 +105,7 @@ namespace Unapproved_Order_No_Price
                 return "d_dw_oe_line_dataentry.detail_type must be selected in Field Selector.";
 
             if (!lineTable.Columns.Contains(CancelFlagFieldName))
-                return "d_dw_oe_line_dataentry.cancel_flag must be selected in Field Selector.";
+                return "d_dw_oe_line_dataentry.oe_line_cancel_flag must be selected in Field Selector.";
 
             if (!lineTable.Columns.Contains(DeleteFlagFieldName))
                 return "d_dw_oe_line_dataentry.delete_flag must be selected in Field Selector.";
@@ -257,7 +257,7 @@ namespace Unapproved_Order_No_Price
         private const string ManagerApprovedFieldName = "ufc_oe_hdr_ud_manager_approved";
         private const string UnitPriceFieldName = "unit_price";
         private const string DetailTypeFieldName = "detail_type";
-        private const string CancelFlagFieldName = "cancel_flag";
+        private const string CancelFlagFieldName = "oe_line_cancel_flag";
         private const string DeleteFlagFieldName = "delete_flag";
         private const string TermsFieldName = "oe_hdr_terms";
         private const string CreditCardNameFieldName = "cc_name";
@@ -379,7 +379,7 @@ namespace Unapproved_Order_No_Price
                 return "d_dw_oe_line_dataentry.detail_type must be selected in Field Selector.";
 
             if (!lineTable.Columns.Contains(CancelFlagFieldName))
-                return "d_dw_oe_line_dataentry.cancel_flag must be selected in Field Selector.";
+                return "d_dw_oe_line_dataentry.oe_line_cancel_flag must be selected in Field Selector.";
 
             if (!lineTable.Columns.Contains(DeleteFlagFieldName))
                 return "d_dw_oe_line_dataentry.delete_flag must be selected in Field Selector.";

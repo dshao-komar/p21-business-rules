@@ -41,7 +41,7 @@ These fields are used by the rules:
 - `d_dw_oe_line_dataentry.unit_price`
 - `d_dw_oe_line_dataentry.oe_order_item_id`
 - `d_dw_oe_line_dataentry.detail_type`
-- `d_dw_oe_line_dataentry.cancel_flag`
+- `d_dw_oe_line_dataentry.oe_line_cancel_flag`
 - `d_dw_oe_line_dataentry.delete_flag`
 
 ## Rule: Unapproved_Order_No_Price
@@ -60,7 +60,7 @@ Missing pricing means:
 The rule evaluates only active parent/order rows in `d_dw_oe_line_dataentry`:
 
 - `detail_type = 0`
-- `cancel_flag <> Y`
+- `oe_line_cancel_flag <> Y`
 - `delete_flag <> Y`
 
 It intentionally ignores component/child rows such as `detail_type = 1`, even when those rows have `unit_price = 0`.
@@ -95,7 +95,7 @@ Select these fields for the save rule:
 - `d_dw_oe_line_dataentry.unit_price`
 - `d_dw_oe_line_dataentry.oe_order_item_id`
 - `d_dw_oe_line_dataentry.detail_type`
-- `d_dw_oe_line_dataentry.cancel_flag`
+- `d_dw_oe_line_dataentry.oe_line_cancel_flag`
 - `d_dw_oe_line_dataentry.delete_flag`
 
 ### Triggered Fields
@@ -125,7 +125,7 @@ Important implementation detail confirmed by live diagnostics:
 - during the `approved` field-edit event, P21 passes the prior value in `Data.TriggerOriginalValue`
 - `d_oe_header.approved` in the multi-row dataset may still show the prior value, not the attempted checked value
 - the validator therefore treats `Data.TriggerOriginalValue = N` as an attempted approval check and `Data.TriggerOriginalValue = Y` as an uncheck/already-approved edit
-- production build version: `1.0.6.0`
+- production build version: `1.0.7.0`
 
 Production false-positive lesson:
 
@@ -172,7 +172,7 @@ Select these fields for the field-edit rule:
 - `d_oe_payment_details.cc_name`
 - `d_dw_oe_line_dataentry.unit_price`
 - `d_dw_oe_line_dataentry.detail_type`
-- `d_dw_oe_line_dataentry.cancel_flag`
+- `d_dw_oe_line_dataentry.oe_line_cancel_flag`
 - `d_dw_oe_line_dataentry.delete_flag`
 
 ### Triggered Fields
