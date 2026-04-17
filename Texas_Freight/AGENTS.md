@@ -38,8 +38,8 @@ Confirmed implementation adjustment:
 These fields are used by the rule:
 
 - `d_oe_header.oe_hdr_ship2_state`
-- `d_oe_header.freight_code_uid`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved`
+- `d_dw_oe_hdr_shipinfo.freight_cd`
 - `d_dw_oe_line_dataentry.sales_tax`
 - `d_dw_oe_line_dataentry.detail_type`
 - `d_dw_oe_line_dataentry.oe_line_cancel_flag`
@@ -56,13 +56,13 @@ The rule applies when:
 - `d_oe_header.oe_hdr_ship2_state = TX`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved <> Y`
 - at least one active sales-order line has nonzero `d_dw_oe_line_dataentry.sales_tax`
-- `d_oe_header.freight_code_uid <> 2`
+- `d_dw_oe_hdr_shipinfo.freight_cd <> COLLECT`
 
 When all conditions are met, the rule sets:
 
-- `d_oe_header.freight_code_uid = 2`
+- `d_dw_oe_hdr_shipinfo.freight_cd = COLLECT`
 
-Freight code `2` is `COLLECT` per the source request:
+The source request identifies `freight_code_uid = 2` as the database value for `COLLECT`, but the rule intentionally updates the editable DynaChange field instead of the protected UID field:
 
 - `freight_code_uid`: `2`
 - `freight_cd`: `COLLECT`
@@ -104,12 +104,20 @@ Blank, null, or nonnumeric `sales_tax` values are treated as zero tax.
 Select these fields for the save rule:
 
 - `d_oe_header.oe_hdr_ship2_state`
-- `d_oe_header.freight_code_uid`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved`
+- `d_dw_oe_hdr_shipinfo.freight_cd`
 - `d_dw_oe_line_dataentry.sales_tax`
 - `d_dw_oe_line_dataentry.detail_type`
 - `d_dw_oe_line_dataentry.oe_line_cancel_flag`
 - `d_dw_oe_line_dataentry.delete_flag`
+
+For the freight code selector row, P21 displays:
+
+- `DataWindow`: `d_dw_oe_hdr_shipinfo`
+- `Field Title`: `Freight Code`
+- `Pass To Rule As`: `freight_cd`
+
+Do not select or write `d_oe_header.freight_code_uid`; that UID field is protected in DynaChange.
 
 ### Triggered Fields
 
@@ -128,6 +136,10 @@ Setup labels and patterns were verified against:
 - `C:\Users\DanShao\.vscode\p21_business_rules\Texas_Freight\Outlook Email - Request - Business Rule for Order Entry Texas State Sales Tax - Dan Shao - Outlook.pdf`
 
 ## Build Notes
+
+Current assembly version:
+
+- `1.0.1.0`
 
 Compile with the Windows .NET Framework compiler and the existing local P21 DLL references:
 

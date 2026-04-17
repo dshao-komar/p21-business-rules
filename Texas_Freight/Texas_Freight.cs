@@ -9,15 +9,16 @@ namespace Texas_Freight
     public class Texas_Freight : P21.Extensions.BusinessRule.Rule
     {
         private const string HeaderTableName = "d_oe_header";
+        private const string ShipInfoTableName = "d_dw_oe_hdr_shipinfo";
         private const string LineTableName = "d_dw_oe_line_dataentry";
         private const string ShipToStateFieldName = "oe_hdr_ship2_state";
-        private const string FreightCodeUidFieldName = "freight_code_uid";
+        private const string FreightCodeFieldName = "freight_cd";
         private const string ManagerApprovedFieldName = "ufc_oe_hdr_ud_manager_approved";
         private const string SalesTaxFieldName = "sales_tax";
         private const string DetailTypeFieldName = "detail_type";
         private const string CancelFlagFieldName = "oe_line_cancel_flag";
         private const string DeleteFlagFieldName = "delete_flag";
-        private const int CollectFreightCodeUid = 2;
+        private const string CollectFreightCode = "COLLECT";
 
         public override string GetName()
         {
@@ -54,6 +55,7 @@ namespace Texas_Freight
             }
 
             DataTable headerTable = dataSet.Tables[HeaderTableName];
+            DataTable shipInfoTable = dataSet.Tables[ShipInfoTableName];
             DataTable lineTable = dataSet.Tables[LineTableName];
 
             if (!IsTexasShipTo(headerTable) || IsHeaderYes(headerTable, ManagerApprovedFieldName) || !HasTaxableActiveLine(lineTable))
@@ -63,14 +65,14 @@ namespace Texas_Freight
                 return result;
             }
 
-            if (GetHeaderInt(headerTable, FreightCodeUidFieldName) == CollectFreightCodeUid)
+            if (IsCollectFreightCode(shipInfoTable))
             {
                 result.Success = true;
                 result.Message = string.Empty;
                 return result;
             }
 
-            headerTable.Rows[0][FreightCodeUidFieldName] = CollectFreightCodeUid;
+            shipInfoTable.Rows[0][FreightCodeFieldName] = CollectFreightCode;
 
             result.Success = true;
             result.Message = "This taxable Texas order requires freight code COLLECT. Freight code has been changed to COLLECT.";
@@ -82,23 +84,30 @@ namespace Texas_Freight
             if (!dataSet.Tables.Contains(HeaderTableName))
                 return "The multi-row dataset is missing d_oe_header.";
 
+            if (!dataSet.Tables.Contains(ShipInfoTableName))
+                return "The multi-row dataset is missing d_dw_oe_hdr_shipinfo.";
+
             if (!dataSet.Tables.Contains(LineTableName))
                 return "The multi-row dataset is missing d_dw_oe_line_dataentry.";
 
             DataTable headerTable = dataSet.Tables[HeaderTableName];
+            DataTable shipInfoTable = dataSet.Tables[ShipInfoTableName];
             DataTable lineTable = dataSet.Tables[LineTableName];
 
             if (headerTable.Rows.Count == 0)
                 return "The multi-row dataset has no d_oe_header row.";
 
+            if (shipInfoTable.Rows.Count == 0)
+                return "The multi-row dataset has no d_dw_oe_hdr_shipinfo row.";
+
             if (!headerTable.Columns.Contains(ShipToStateFieldName))
                 return "d_oe_header.oe_hdr_ship2_state must be selected in Field Selector.";
 
-            if (!headerTable.Columns.Contains(FreightCodeUidFieldName))
-                return "d_oe_header.freight_code_uid must be selected in Field Selector.";
-
             if (!headerTable.Columns.Contains(ManagerApprovedFieldName))
                 return "d_oe_header.ufc_oe_hdr_ud_manager_approved must be selected in Field Selector.";
+
+            if (!shipInfoTable.Columns.Contains(FreightCodeFieldName))
+                return "d_dw_oe_hdr_shipinfo.freight_cd must be selected in Field Selector.";
 
             if (!lineTable.Columns.Contains(SalesTaxFieldName))
                 return "d_dw_oe_line_dataentry.sales_tax must be selected in Field Selector.";
@@ -119,6 +128,12 @@ namespace Texas_Freight
         {
             string state = GetHeaderString(headerTable, ShipToStateFieldName).Trim();
             return string.Equals(state, "TX", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsCollectFreightCode(DataTable shipInfoTable)
+        {
+            string freightCode = GetTableString(shipInfoTable, FreightCodeFieldName).Trim();
+            return string.Equals(freightCode, CollectFreightCode, StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool HasTaxableActiveLine(DataTable lineTable)
@@ -167,21 +182,24 @@ namespace Texas_Freight
             return Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
-        private static int? GetHeaderInt(DataTable headerTable, string columnName)
-        {
-            int value;
-            if (TryParseInt(GetHeaderString(headerTable, columnName), out value))
-                return value;
-
-            return null;
-        }
-
         private static string GetString(DataRow row, string columnName)
         {
             if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
                 return string.Empty;
 
             return Convert.ToString(row[columnName], CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
+        private static string GetTableString(DataTable table, string columnName)
+        {
+            if (table.Rows.Count == 0 || !table.Columns.Contains(columnName))
+                return string.Empty;
+
+            object value = table.Rows[0][columnName];
+            if (value == null || value == DBNull.Value)
+                return string.Empty;
+
+            return Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
         private static bool TryGetInt(DataRow row, string columnName, out int value)
