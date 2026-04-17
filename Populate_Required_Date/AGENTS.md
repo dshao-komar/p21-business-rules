@@ -36,6 +36,8 @@ Qualifying sales-order rows must meet all of the following:
 - `ISNULL(oe_hdr.rma_flag, 'N') <> 'Y'`
 - `ISNULL(oe_hdr.warranty_rma_flag, 'N') <> 'Y'`
 - `COALESCE(oe_line_schedule.release_date, oe_line.required_date) IS NOT NULL`
+- `COALESCE(oe_line_schedule.allocated_qty, oe_line.qty_allocated, 0) <= 0`
+- `COALESCE(oe_line_schedule.qty_picked, oe_line.qty_on_pick_tickets, 0) <= 0`
 
 ### Required date source
 
@@ -48,6 +50,18 @@ Current implementation:
 
 - `required_date = COALESCE(oe_line_schedule.release_date, oe_line.required_date)`
 - `qty_ordered = COALESCE(oe_line_schedule.release_qty, oe_line.qty_ordered)` for tie-break consistency when a release schedule row exists
+- allocated demand is excluded using `COALESCE(oe_line_schedule.allocated_qty, oe_line.qty_allocated, 0) > 0`
+- picked demand is excluded using `COALESCE(oe_line_schedule.qty_picked, oe_line.qty_on_pick_tickets, 0) > 0`
+
+### Allocated / picked exclusion
+
+If an open sales order already has allocated quantity or quantity on pick tickets, the production order is not intended for that sales order anymore.
+
+Example:
+
+- item `UPLOT30272`
+- sales order `1283095` has positive `qty_on_pick_tickets`, so it is skipped
+- sales order `1283310` is the next eligible order by required date and should be selected
 
 ### Finished-item scope
 
@@ -71,7 +85,7 @@ The implementation also applies `order_no` as a final deterministic fallback aft
 ### Overwrite behavior
 
 - if a qualifying open sales order is found, overwrite both header fields on save
-- if no qualifying open sales order is found, leave the current header values unchanged
+- if no qualifying open sales order is found, clear the header customer name and leave the production-order required date unchanged
 
 ## Current Rule Files
 
@@ -156,6 +170,9 @@ If a nightly SQL synchronization job is used to backfill or correct production-o
 - exclude `oe_hdr.rma_flag = 'Y'`
 - exclude `oe_hdr.warranty_rma_flag = 'Y'`
 - derive `required_date` from `COALESCE(oe_line_schedule.release_date, oe_line.required_date)`
+- exclude allocated demand and picked demand
+- clear `prod_order_hdr_ud.customer_name` when no eligible open sales order remains
+- leave `prod_order_hdr.required_date` unchanged when no eligible open sales order remains
 - keep the same tie-break order:
   1. earliest `required_date`
   2. highest `qty_ordered`

@@ -79,6 +79,7 @@ namespace Populate_Required_Date
 
             if (earliestMatch == null)
             {
+                ClearHeaderCustomerName(dataSet.Tables[HeaderTableName]);
                 result.Success = true;
                 result.Message = string.Empty;
                 return result;
@@ -179,6 +180,8 @@ namespace Populate_Required_Date
             sql.AppendLine("      AND ISNULL(oeh.rma_flag, 'N') <> 'Y'");
             sql.AppendLine("      AND ISNULL(oeh.warranty_rma_flag, 'N') <> 'Y'");
             sql.AppendLine("      AND COALESCE(oels.release_date, oel.required_date) IS NOT NULL");
+            sql.AppendLine("      AND COALESCE(oels.allocated_qty, oel.qty_allocated, 0) <= 0");
+            sql.AppendLine("      AND COALESCE(oels.qty_picked, oel.qty_on_pick_tickets, 0) <= 0");
             sql.AppendLine("      AND oel.inv_mast_uid IN (" + BuildParameterList(invMastUidCount) + ")");
             sql.AppendLine(")");
             sql.AppendLine("SELECT TOP (1)");
@@ -223,6 +226,17 @@ namespace Populate_Required_Date
             headerRow[HeaderCustomerNameField] = string.IsNullOrWhiteSpace(match.CustomerName)
                 ? (object)DBNull.Value
                 : match.CustomerName;
+        }
+
+        private static void ClearHeaderCustomerName(DataTable headerTable)
+        {
+            if (headerTable.Rows.Count == 0)
+                throw new ApplicationException("d_prod_order_hdr has no header row to update.");
+
+            if (!headerTable.Columns.Contains(HeaderCustomerNameField))
+                throw new ApplicationException("d_prod_order_hdr is missing ufc_prod_order_hdr_ud_customer_name.");
+
+            headerTable.Rows[0][HeaderCustomerNameField] = DBNull.Value;
         }
 
         private static bool TryGetInt(DataRow row, string columnName, out int value)
