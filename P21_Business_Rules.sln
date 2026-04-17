@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Populate_Required_Date", "P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unapproved_Order_No_Price", "Unapproved_Order_No_Price\Unapproved_Order_No_Price.csproj", "{56A4D3C5-C315-4965-85CD-63D5676628E9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Texas_Freight", "Texas_Freight\Texas_Freight.csproj", "{1D1C9C76-DCD2-4B43-9794-A81D8485BFBF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{56A4D3C5-C315-4965-85CD-63D5676628E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{56A4D3C5-C315-4965-85CD-63D5676628E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56A4D3C5-C315-4965-85CD-63D5676628E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D1C9C76-DCD2-4B43-9794-A81D8485BFBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D1C9C76-DCD2-4B43-9794-A81D8485BFBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D1C9C76-DCD2-4B43-9794-A81D8485BFBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D1C9C76-DCD2-4B43-9794-A81D8485BFBF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
