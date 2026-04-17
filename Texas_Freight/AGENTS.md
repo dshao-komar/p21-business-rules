@@ -37,7 +37,7 @@ Confirmed implementation adjustment:
 
 These fields are used by the rule:
 
-- `d_oe_header.ship2_state`
+- `d_oe_header.oe_hdr_ship2_state`
 - `d_oe_header.freight_code_uid`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved`
 - `d_dw_oe_line_dataentry.sales_tax`
@@ -53,7 +53,7 @@ This rule runs on sales-order save in multi-row mode.
 
 The rule applies when:
 
-- `d_oe_header.ship2_state = TX`
+- `d_oe_header.oe_hdr_ship2_state = TX`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved <> Y`
 - at least one active sales-order line has nonzero `d_dw_oe_line_dataentry.sales_tax`
 - `d_oe_header.freight_code_uid <> 2`
@@ -103,7 +103,7 @@ Blank, null, or nonnumeric `sales_tax` values are treated as zero tax.
 
 Select these fields for the save rule:
 
-- `d_oe_header.ship2_state`
+- `d_oe_header.oe_hdr_ship2_state`
 - `d_oe_header.freight_code_uid`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved`
 - `d_dw_oe_line_dataentry.sales_tax`

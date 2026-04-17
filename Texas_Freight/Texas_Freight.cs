@@ -10,7 +10,7 @@ namespace Texas_Freight
     {
         private const string HeaderTableName = "d_oe_header";
         private const string LineTableName = "d_dw_oe_line_dataentry";
-        private const string ShipToStateFieldName = "ship2_state";
+        private const string ShipToStateFieldName = "oe_hdr_ship2_state";
         private const string FreightCodeUidFieldName = "freight_code_uid";
         private const string ManagerApprovedFieldName = "ufc_oe_hdr_ud_manager_approved";
         private const string SalesTaxFieldName = "sales_tax";
@@ -92,7 +92,7 @@ namespace Texas_Freight
                 return "The multi-row dataset has no d_oe_header row.";
 
             if (!headerTable.Columns.Contains(ShipToStateFieldName))
-                return "d_oe_header.ship2_state must be selected in Field Selector.";
+                return "d_oe_header.oe_hdr_ship2_state must be selected in Field Selector.";
 
             if (!headerTable.Columns.Contains(FreightCodeUidFieldName))
                 return "d_oe_header.freight_code_uid must be selected in Field Selector.";
