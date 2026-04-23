@@ -13,6 +13,7 @@ namespace Unapproved_Order_No_Price
         private const string LineTableName = "d_dw_oe_line_dataentry";
         private const string ApprovedFieldName = "approved";
         private const string ManagerApprovedFieldName = "ufc_oe_hdr_ud_manager_approved";
+        private const string SampleFieldName = "ufc_oe_hdr_ud_sample";
         private const string UnitPriceFieldName = "unit_price";
         private const string OrderItemIdFieldName = "oe_order_item_id";
         private const string DetailTypeFieldName = "detail_type";
@@ -61,7 +62,7 @@ namespace Unapproved_Order_No_Price
                 return result;
             }
 
-            if (IsHeaderYes(dataSet, ManagerApprovedFieldName))
+            if (IsHeaderYes(dataSet, ManagerApprovedFieldName) || IsHeaderYes(dataSet, SampleFieldName))
             {
                 result.Success = true;
                 result.Message = string.Empty;
@@ -94,6 +95,9 @@ namespace Unapproved_Order_No_Price
 
             if (!headerTable.Columns.Contains(ManagerApprovedFieldName))
                 return "d_oe_header.ufc_oe_hdr_ud_manager_approved must be selected in Field Selector.";
+
+            if (!headerTable.Columns.Contains(SampleFieldName))
+                return "d_oe_header.ufc_oe_hdr_ud_sample must be selected in Field Selector.";
 
             if (!lineTable.Columns.Contains(UnitPriceFieldName))
                 return "d_dw_oe_line_dataentry.unit_price must be selected in Field Selector.";
@@ -255,6 +259,7 @@ namespace Unapproved_Order_No_Price
         private const string PaymentDetailsTableName = "d_oe_payment_details";
         private const string ApprovedFieldName = "approved";
         private const string ManagerApprovedFieldName = "ufc_oe_hdr_ud_manager_approved";
+        private const string SampleFieldName = "ufc_oe_hdr_ud_sample";
         private const string UnitPriceFieldName = "unit_price";
         private const string DetailTypeFieldName = "detail_type";
         private const string CancelFlagFieldName = "oe_line_cancel_flag";
@@ -324,6 +329,7 @@ namespace Unapproved_Order_No_Price
             }
 
             if (GetHeaderFlag(dataSet, ManagerApprovedFieldName) == "Y" ||
+                GetHeaderFlag(dataSet, SampleFieldName) == "Y" ||
                 !HasMissingPrice(dataSet.Tables[LineTableName]))
             {
                 result.Success = true;
@@ -359,6 +365,9 @@ namespace Unapproved_Order_No_Price
 
             if (!headerTable.Columns.Contains(ManagerApprovedFieldName))
                 return "d_oe_header.ufc_oe_hdr_ud_manager_approved must be selected in Field Selector.";
+
+            if (!headerTable.Columns.Contains(SampleFieldName))
+                return "d_oe_header.ufc_oe_hdr_ud_sample must be selected in Field Selector.";
 
             if (!headerTable.Columns.Contains(TermsFieldName))
                 return "d_oe_header.oe_hdr_terms must be selected in Field Selector.";

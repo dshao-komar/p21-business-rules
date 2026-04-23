@@ -12,9 +12,12 @@ Intent:
   - force `d_oe_header.approved` to `N`
   - show a warning message
 - if Manager Approved is checked, allow the order to remain approved
+- if `d_oe_header.ufc_oe_hdr_ud_sample = Y`, allow the order to remain approved even when pricing is zero and Manager Approved is not checked
 - block users from checking `d_oe_header.approved` when any selected line is missing pricing unless Manager Approved is checked
 
 `d_oe_header.ufc_oe_hdr_ud_manager_approved` is the manual approval override for unpriced orders.
+
+`d_oe_header.ufc_oe_hdr_ud_sample` is also an override for the no-price approval restriction.
 
 ## Current Rule Files
 
@@ -34,6 +37,7 @@ These fields are used by the rules:
 
 - `d_oe_header.approved`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved`
+- `d_oe_header.ufc_oe_hdr_ud_sample`
 - `d_oe_header.oe_hdr_terms`
 - `d_oe_payment_details.cc_creditcard_number`
 - `d_oe_payment_details.cc_expiration_date`
@@ -92,6 +96,7 @@ Select these fields for the save rule:
 
 - `d_oe_header.approved`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved`
+- `d_oe_header.ufc_oe_hdr_ud_sample`
 - `d_dw_oe_line_dataentry.unit_price`
 - `d_dw_oe_line_dataentry.oe_order_item_id`
 - `d_dw_oe_line_dataentry.detail_type`
@@ -114,6 +119,7 @@ This rule runs when `d_oe_header.approved` is edited.
 
 - checking `approved` is allowed when all selected lines have a nonblank, nonzero `unit_price`
 - checking `approved` is also allowed when `d_oe_header.ufc_oe_hdr_ud_manager_approved = Y`
+- checking `approved` is also allowed when `d_oe_header.ufc_oe_hdr_ud_sample = Y`
 - checking `approved` is blocked when any selected line is missing pricing and Manager Approved is not checked
 - checking `approved` is also blocked when `oe_hdr_terms = Credit Card` and any required credit-card detail is blank
 - unchecking `approved` is allowed silently
@@ -125,7 +131,7 @@ Important implementation detail confirmed by live diagnostics:
 - during the `approved` field-edit event, P21 passes the prior value in `Data.TriggerOriginalValue`
 - `d_oe_header.approved` in the multi-row dataset may still show the prior value, not the attempted checked value
 - the validator therefore treats `Data.TriggerOriginalValue = N` as an attempted approval check and `Data.TriggerOriginalValue = Y` as an uncheck/already-approved edit
-- production build version: `1.0.7.0`
+- production build version: `1.0.8.0`
 
 Production false-positive lesson:
 
@@ -166,6 +172,7 @@ Select these fields for the field-edit rule:
 
 - `d_oe_header.approved`
 - `d_oe_header.ufc_oe_hdr_ud_manager_approved`
+- `d_oe_header.ufc_oe_hdr_ud_sample`
 - `d_oe_header.oe_hdr_terms`
 - `d_oe_payment_details.cc_creditcard_number`
 - `d_oe_payment_details.cc_expiration_date`
