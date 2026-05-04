@@ -12,7 +12,7 @@ Intent:
 - populate the production-order header fields:
   - `d_prod_order_hdr.required_date`
   - `d_prod_order_hdr.ufc_prod_order_hdr_ud_customer_name`
-- do not overwrite either field when no qualifying open sales order is found
+- when no qualifying open sales order is found, clear the customer name and leave the existing required date unchanged
 
 ## Confirmed Dataset Fields
 
@@ -35,23 +35,28 @@ Qualifying sales-order rows must meet all of the following:
 - `COALESCE(oe_hdr.order_type, 0) NOT IN (1877, 1706)`
 - `ISNULL(oe_hdr.rma_flag, 'N') <> 'Y'`
 - `ISNULL(oe_hdr.warranty_rma_flag, 'N') <> 'Y'`
-- `COALESCE(oe_line_schedule.release_date, oe_line.required_date) IS NOT NULL`
-- `COALESCE(oe_line_schedule.allocated_qty, oe_line.qty_allocated, 0) <= 0`
-- `COALESCE(oe_line_schedule.qty_picked, oe_line.qty_on_pick_tickets, 0) <= 0`
+- if `oe_line.scheduled = 'Y'`, a qualifying next schedule release must exist
+- if `oe_line.scheduled <> 'Y'`, `oe_line.required_date IS NOT NULL`
+- if `oe_line.scheduled <> 'Y'`, `COALESCE(oe_line.qty_allocated, 0) <= 0`
+- if `oe_line.scheduled <> 'Y'`, `COALESCE(oe_line.qty_on_pick_tickets, 0) <= 0`
 
 ### Required date source
 
-The rule must mirror the `required_dt` logic used in `fact_open_orders`:
+The rule must mirror the logic used by the nightly SQL scripts in this folder:
 
-- if a release schedule exists for the sales-order line, use `oe_line_schedule.release_date`
+- if `oe_line.scheduled = 'Y'`, use the next qualifying `oe_line_schedule.release_date`
 - otherwise use `oe_line.required_date`
 
 Current implementation:
 
-- `required_date = COALESCE(oe_line_schedule.release_date, oe_line.required_date)`
-- `qty_ordered = COALESCE(oe_line_schedule.release_qty, oe_line.qty_ordered)` for tie-break consistency when a release schedule row exists
-- allocated demand is excluded using `COALESCE(oe_line_schedule.allocated_qty, oe_line.qty_allocated, 0) > 0`
-- picked demand is excluded using `COALESCE(oe_line_schedule.qty_picked, oe_line.qty_on_pick_tickets, 0) > 0`
+- scheduled lines use `OUTER APPLY SELECT TOP (1)` from `oe_line_schedule`
+- qualifying scheduled releases must have `CAST(oe_line_schedule.release_date AS date) >= CAST(GETDATE() AS date)`
+- qualifying scheduled releases must have `oe_line_schedule.allocated_qty <= 0`
+- qualifying scheduled releases must have `ISNULL(oe_line_schedule.qty_picked, 0) <= 0`
+- the selected scheduled release is ordered by `release_date`, then `release_no`, then `oe_line_schedule_uid`
+- `required_date` comes from the selected schedule release for scheduled lines and from `oe_line.required_date` for unscheduled lines
+- `qty_ordered` comes from the selected schedule release quantity for scheduled lines and from `oe_line.qty_ordered` for unscheduled lines
+- allocated and picked unscheduled demand is excluded using `oe_line.qty_allocated` and `oe_line.qty_on_pick_tickets`
 
 ### Allocated / picked exclusion
 
@@ -76,8 +81,8 @@ Excluded production-order rows:
 
 The winner is selected using this order:
 
-1. earliest `oe_line.required_date`
-2. highest `oe_line.qty_ordered`
+1. earliest selected `required_date`
+2. highest selected `qty_ordered`
 3. alphabetical `customer_name`
 
 The implementation also applies `order_no` as a final deterministic fallback after the confirmed business tie-breakers so the SQL always returns one row consistently.
@@ -134,6 +139,11 @@ This rule runs on `Save`, not `Field Edit`, so there is no single field-specific
 - `Execution event`: production-order `Save`
 - `Important`: the rule still depends on the Field Selector entries above being included in the multi-row dataset even though no field-level trigger is used
 
+### Setup References
+
+- `Rule Type` and `Apply Rule On` follow the confirmed save-time validator setup pattern documented for this rule and the local business-rule setup standard in `C:\Users\DanShao\.vscode\p21_business_rules\AGENTS.md`.
+- No change to Prophet 21 setup is required for the scheduled-line SQL logic update.
+
 ### Setup Checklist
 
 Use this exact setup pattern in Prophet 21:
@@ -169,8 +179,9 @@ If a nightly SQL synchronization job is used to backfill or correct production-o
 
 - exclude `oe_hdr.rma_flag = 'Y'`
 - exclude `oe_hdr.warranty_rma_flag = 'Y'`
-- derive `required_date` from `COALESCE(oe_line_schedule.release_date, oe_line.required_date)`
-- exclude allocated demand and picked demand
+- for scheduled lines, derive `required_date` and `qty_ordered` from the next future unallocated and unpicked schedule release
+- for unscheduled lines, derive `required_date` and `qty_ordered` from `oe_line`
+- exclude allocated and picked demand using schedule-level values for scheduled lines and line-level values for unscheduled lines
 - clear `prod_order_hdr_ud.customer_name` when no eligible open sales order remains
 - leave `prod_order_hdr.required_date` unchanged when no eligible open sales order remains
 - keep the same tie-break order:
