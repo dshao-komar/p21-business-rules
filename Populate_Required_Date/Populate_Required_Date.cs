@@ -214,7 +214,7 @@ namespace Populate_Required_Date
             sql.AppendLine("          (");
             sql.AppendLine("              ISNULL(oel.scheduled, 'N') <> 'Y'");
             sql.AppendLine("              AND oel.required_date IS NOT NULL");
-            sql.AppendLine("              AND COALESCE(oel.qty_allocated, 0) <= 0");
+            sql.AppendLine("              AND COALESCE(oel.qty_allocated, 0) < COALESCE(oel.qty_ordered, 0)");
             sql.AppendLine("              AND COALESCE(oel.qty_on_pick_tickets, 0) <= 0");
             sql.AppendLine("          )");
             sql.AppendLine("      )");

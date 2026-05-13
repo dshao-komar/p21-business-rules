@@ -37,7 +37,7 @@ Qualifying sales-order rows must meet all of the following:
 - `ISNULL(oe_hdr.warranty_rma_flag, 'N') <> 'Y'`
 - if `oe_line.scheduled = 'Y'`, a qualifying next schedule release must exist
 - if `oe_line.scheduled <> 'Y'`, `oe_line.required_date IS NOT NULL`
-- if `oe_line.scheduled <> 'Y'`, `COALESCE(oe_line.qty_allocated, 0) <= 0`
+- if `oe_line.scheduled <> 'Y'`, `COALESCE(oe_line.qty_allocated, 0) < COALESCE(oe_line.qty_ordered, 0)`
 - if `oe_line.scheduled <> 'Y'`, `COALESCE(oe_line.qty_on_pick_tickets, 0) <= 0`
 
 ### Required date source
@@ -56,11 +56,11 @@ Current implementation:
 - the selected scheduled release is ordered by `release_date`, then `release_no`, then `oe_line_schedule_uid`
 - `required_date` comes from the selected schedule release for scheduled lines and from `oe_line.required_date` for unscheduled lines
 - `qty_ordered` comes from the selected schedule release quantity for scheduled lines and from `oe_line.qty_ordered` for unscheduled lines
-- allocated and picked unscheduled demand is excluded using `oe_line.qty_allocated` and `oe_line.qty_on_pick_tickets`
+- fully allocated and picked unscheduled demand is excluded using `oe_line.qty_allocated`, `oe_line.qty_ordered`, and `oe_line.qty_on_pick_tickets`
 
 ### Allocated / picked exclusion
 
-If an open sales order already has allocated quantity or quantity on pick tickets, the production order is not intended for that sales order anymore.
+If an open unscheduled sales order is fully allocated or has quantity on pick tickets, the production order is not intended for that sales order anymore. Partially allocated unscheduled demand remains eligible when `qty_allocated < qty_ordered`.
 
 Example:
 
@@ -181,7 +181,8 @@ If a nightly SQL synchronization job is used to backfill or correct production-o
 - exclude `oe_hdr.warranty_rma_flag = 'Y'`
 - for scheduled lines, derive `required_date` and `qty_ordered` from the next future unallocated and unpicked schedule release
 - for unscheduled lines, derive `required_date` and `qty_ordered` from `oe_line`
-- exclude allocated and picked demand using schedule-level values for scheduled lines and line-level values for unscheduled lines
+- for scheduled lines, use only unallocated and unpicked schedule releases
+- for unscheduled lines, exclude fully allocated demand and picked demand using line-level values
 - clear `prod_order_hdr_ud.customer_name` when no eligible open sales order remains
 - leave `prod_order_hdr.required_date` unchanged when no eligible open sales order remains
 - keep the same tie-break order:

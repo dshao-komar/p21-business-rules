@@ -70,7 +70,7 @@ cte_eligible_open_sales_orders AS
           (
               ISNULL(oel.scheduled, 'N') <> 'Y'
               AND oel.required_date IS NOT NULL
-              AND COALESCE(oel.qty_allocated, 0) <= 0
+              AND COALESCE(oel.qty_allocated, 0) < COALESCE(oel.qty_ordered, 0)
               AND COALESCE(oel.qty_on_pick_tickets, 0) <= 0
           )
       )

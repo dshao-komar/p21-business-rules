@@ -16,15 +16,40 @@ cte_eligible_open_sales_orders AS
     SELECT
           oel.inv_mast_uid
         , cst.customer_name
-        , CAST(COALESCE(oels.release_date, oel.required_date) AS date) AS required_date
-        , CAST(COALESCE(oels.release_qty, oel.qty_ordered) AS decimal(19, 6)) AS qty_ordered
+        , CAST(
+              CASE
+                  WHEN ISNULL(oel.scheduled, 'N') = 'Y' THEN next_schedule.release_date
+                  ELSE oel.required_date
+              END AS date
+          ) AS required_date
+        , CAST(
+              CASE
+                  WHEN ISNULL(oel.scheduled, 'N') = 'Y' THEN next_schedule.release_qty
+                  ELSE oel.qty_ordered
+              END AS decimal(19, 6)
+          ) AS qty_ordered
         , oel.order_no
     FROM oe_line oel
     INNER JOIN oe_hdr oeh
         ON oeh.order_no = oel.order_no
-    LEFT JOIN oe_line_schedule oels
-        ON oels.order_no = oel.order_no
-       AND oels.line_no = oel.line_no
+    OUTER APPLY
+    (
+        SELECT TOP (1)
+              oels.release_no
+            , oels.oe_line_schedule_uid
+            , oels.release_date
+            , oels.release_qty
+        FROM oe_line_schedule oels
+        WHERE oels.order_no = oel.order_no
+          AND oels.line_no = oel.line_no
+          AND CAST(oels.release_date AS date) >= CAST(GETDATE() AS date)
+          AND oels.allocated_qty <= 0
+          AND ISNULL(oels.qty_picked, 0) <= 0
+        ORDER BY
+              oels.release_date ASC
+            , oels.release_no ASC
+            , oels.oe_line_schedule_uid ASC
+    ) next_schedule
     INNER JOIN customer cst
         ON cst.customer_id = oeh.customer_id
     WHERE oel.complete = 'N'
@@ -32,9 +57,20 @@ cte_eligible_open_sales_orders AS
       AND COALESCE(oeh.order_type, 0) NOT IN (1877, 1706)
       AND ISNULL(oeh.rma_flag, 'N') <> 'Y'
       AND ISNULL(oeh.warranty_rma_flag, 'N') <> 'Y'
-      AND COALESCE(oels.release_date, oel.required_date) IS NOT NULL
-      AND COALESCE(oels.allocated_qty, oel.qty_allocated, 0) <= 0
-      AND COALESCE(oels.qty_picked, oel.qty_on_pick_tickets, 0) <= 0
+      AND
+      (
+          (
+              ISNULL(oel.scheduled, 'N') = 'Y'
+              AND next_schedule.release_date IS NOT NULL
+          )
+          OR
+          (
+              ISNULL(oel.scheduled, 'N') <> 'Y'
+              AND oel.required_date IS NOT NULL
+              AND COALESCE(oel.qty_allocated, 0) < COALESCE(oel.qty_ordered, 0)
+              AND COALESCE(oel.qty_on_pick_tickets, 0) <= 0
+          )
+      )
 ),
 cte_ranked_matches AS
 (
